@@ -64,7 +64,7 @@ Le lab ne se limite pas au déploiement de l'infrastructure. Plusieurs scénario
 - restauration granulaire d'un fichier supprimé ;
 - tentative de suppression d'un backup immutable ;
 - suppression complète du serveur de fichiers FS01 ;
-- restauration complète de la VM avec Entire VM Restore ;
+- restauration complète de la VM avec `Entire VM Restore` ;
 - validation des partages et des données depuis une session utilisateur après restauration.
 
 ## Limites du lab
