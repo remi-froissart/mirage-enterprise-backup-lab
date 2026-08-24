@@ -354,6 +354,16 @@ DL_Informatique_Modification
 
 Ce sont ensuite les groupes `DL_*` qui sont utilisés pour attribuer les permissions sur les ressources.
 
+### Vérification de l'imbrication
+
+L'imbrication a été vérifiée directement dans les propriétés des groupes Active Directory.
+
+L'exemple ci-dessous montre que `GG_Ventes` est bien membre de `DL_Ventes_Modification` :
+
+![Imbrication GG Ventes dans DL Ventes Modification](../images/active-directory/03-agdlp-membership.png)
+
+Cette relation matérialise la partie `G → DL` du modèle AGDLP.
+
 ---
 
 # Exemple complet : Direction
