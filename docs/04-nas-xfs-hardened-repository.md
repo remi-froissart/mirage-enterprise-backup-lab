@@ -206,7 +206,7 @@ La configuration a été vérifiée avec :
 df -hT /data
 ```
 
-Résultat :
+Résultat obtenu lors de la configuration initiale :
 
 ```text
 Sys. de fichiers  Type  Taille  Utilisé  Dispo  Monté sur
