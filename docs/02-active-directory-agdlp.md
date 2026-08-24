@@ -451,7 +451,7 @@ MIRAGE\DL_RH_Modification
 
 ![Validation des groupes avec whoami](../images/active-directory/04-whoami-groups.png)
 
-Cela confirme que l'imbrication AGDLP est correctement prise en compte lors de l'ouverture de session.
+La présence de `GG_RH` et de `DL_RH_Modification` dans le jeton de sécurité confirme que l'imbrication AGDLP est correctement prise en compte lors de l'ouverture de session.
 
 ---
 
