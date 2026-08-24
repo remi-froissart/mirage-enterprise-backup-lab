@@ -312,6 +312,14 @@ Dans ce lab, le niveau utilisé est principalement :
 Modification
 ```
 
+### Groupes de sécurité créés
+
+La séparation entre les groupes globaux et les groupes Domain Local est visible directement dans Active Directory :
+
+![Groupes globaux et Domain Local](../images/active-directory/02-groupes-gg-dl.png)
+
+Les groupes `GG_*` représentent l'appartenance métier, tandis que les groupes `DL_*` sont associés aux permissions sur les ressources.
+
 ---
 
 ## Imbrication des groupes
