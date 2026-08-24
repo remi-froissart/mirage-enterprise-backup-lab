@@ -74,11 +74,9 @@ Mirage-lab
 
 Cette organisation permet de séparer clairement les différents types d'objets Active Directory.
 
----
+### Structure des OU
 
-### Organisation des OU
-
-L'annuaire a été structuré afin de séparer les utilisateurs, les groupes, les postes clients et les serveurs.
+La structure mise en place est visible ci-dessous :
 
 ![Structure des OU Active Directory](../images/active-directory/01-ou-structure.png)
 
