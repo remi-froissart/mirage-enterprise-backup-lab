@@ -1,4 +1,3 @@
-
 # 02 - Active Directory et modèle AGDLP
 
 ## Objectif
@@ -31,7 +30,7 @@ Le nom NetBIOS associé est :
 MIRAGE
 ```
 
-Le contrôleur de domaine principal est :
+Le contrôleur de domaine utilisé dans le lab est :
 
 | Paramètre | Valeur |
 |---|---|
@@ -84,17 +83,9 @@ Cette organisation facilite l'application des stratégies de groupe et permet de
 
 ---
 
-## OU Utilisateurs
+### OU Utilisateurs
 
 Les comptes utilisateurs sont organisés selon leur service.
-
-```text
-Utilisateurs
-├── Direction
-├── RH
-├── Ventes
-└── Informatique
-```
 
 Cette organisation facilite notamment :
 
@@ -103,29 +94,13 @@ Cette organisation facilite notamment :
 - la délégation éventuelle de certaines tâches ;
 - la lisibilité de l'annuaire.
 
-Par exemple, les utilisateurs du service RH sont placés dans :
-
-```text
-Mirage-lab
-└── Utilisateurs
-    └── RH
-```
-
-et les utilisateurs de la Direction dans :
-
-```text
-Mirage-lab
-└── Utilisateurs
-    └── Direction
-```
-
 ---
 
-## OU Postes et Serveurs
+### OU Postes et Serveurs
 
 Les ordinateurs et les serveurs membres du domaine sont également séparés.
 
-### Postes clients
+#### Postes clients
 
 Le poste :
 
@@ -140,7 +115,7 @@ Mirage-lab
 └── Postes
 ```
 
-### Serveurs
+#### Serveurs
 
 Le serveur de fichiers :
 
@@ -159,9 +134,9 @@ Cette séparation permet d'appliquer ultérieurement des stratégies différente
 
 ---
 
-# Modèle AGDLP
+## Modèle AGDLP
 
-## Principe
+### Principe
 
 Le modèle AGDLP signifie :
 
@@ -194,7 +169,7 @@ Cette approche évite d'attribuer directement des permissions à chaque utilisat
 
 ---
 
-## Pourquoi utiliser AGDLP ?
+### Pourquoi utiliser AGDLP ?
 
 Une attribution directe des droits fonctionnerait techniquement :
 
@@ -234,7 +209,7 @@ Les permissions sur le serveur de fichiers n'ont pas besoin d'être modifiées.
 
 ---
 
-# Groupes globaux
+### Groupes globaux
 
 Les groupes globaux représentent l'appartenance métier des utilisateurs.
 
@@ -279,7 +254,7 @@ Le groupe global représente donc essentiellement :
 
 ---
 
-# Groupes Domain Local
+### Groupes Domain Local
 
 Les groupes Domain Local représentent les permissions sur une ressource.
 
@@ -312,7 +287,7 @@ Dans ce lab, le niveau utilisé est principalement :
 Modification
 ```
 
-### Groupes de sécurité créés
+#### Groupes de sécurité créés
 
 La séparation entre les groupes globaux et les groupes Domain Local est visible directement dans Active Directory :
 
@@ -322,7 +297,7 @@ Les groupes `GG_*` représentent l'appartenance métier, tandis que les groupes 
 
 ---
 
-## Imbrication des groupes
+### Imbrication des groupes
 
 Les groupes globaux ont été ajoutés comme membres des groupes Domain Local correspondants.
 
@@ -354,7 +329,7 @@ DL_Informatique_Modification
 
 Ce sont ensuite les groupes `DL_*` qui sont utilisés pour attribuer les permissions sur les ressources.
 
-### Vérification de l'imbrication
+#### Vérification de l'imbrication
 
 L'imbrication a été vérifiée directement dans les propriétés des groupes Active Directory.
 
@@ -366,7 +341,7 @@ Cette relation matérialise la partie `G → DL` du modèle AGDLP.
 
 ---
 
-# Exemple complet : Direction
+### Exemple complet : Direction
 
 La chaîne complète pour un utilisateur de la Direction est :
 
@@ -392,31 +367,7 @@ Cette méthode permet de conserver une gestion propre même si le nombre d'utili
 
 ---
 
-# Exemple complet : RH
-
-Le même principe est appliqué au service RH :
-
-```text
-Compte utilisateur RH
-        │
-        ▼
-GG_RH
-        │
-        ▼
-DL_RH_Modification
-        │
-        ▼
-\\FS01\RH
-        │
-        ▼
-Modification
-```
-
-Les permissions du serveur de fichiers sont donc indépendantes des utilisateurs individuels.
-
----
-
-## Vérification des groupes depuis un poste client
+### Vérification des groupes depuis un poste client
 
 La présence des groupes dans le jeton de sécurité d'un utilisateur a été vérifiée avec :
 
@@ -436,7 +387,7 @@ Par exemple, pour un utilisateur de la Direction, le jeton contient notamment :
 MIRAGE\GG_Direction
 ```
 
-ainsi que le groupe Domain Local associé après résolution de l'imbrication :
+ainsi que le groupe Domain Local associé :
 
 ```text
 MIRAGE\DL_Direction_Modification
@@ -455,7 +406,7 @@ La présence de `GG_RH` et de `DL_RH_Modification` dans le jeton de sécurité c
 
 ---
 
-# Intégration des machines au domaine
+## Intégration des machines au domaine
 
 Les machines Windows utilisées dans le lab ont été intégrées au domaine :
 
@@ -493,65 +444,11 @@ ou :
 utilisateur@ad.mirage-lab.cloud
 ```
 
----
-
-## Exemple de session utilisateur
-
-La session d'un utilisateur du domaine peut être vérifiée avec :
-
-```powershell
-whoami
-```
-
-Exemple :
-
-```text
-mirage\alice.martin
-```
-
-Cela permet de confirmer que l'authentification est bien réalisée par Active Directory et non avec un compte local du poste.
+Une vérification avec `whoami` permet de confirmer que la session utilise bien un compte du domaine et non un compte local du poste.
 
 ---
 
-# Séparation identité / ressource
-
-L'intérêt principal du modèle retenu est la séparation entre deux notions.
-
-### Groupes globaux
-
-Ils représentent les personnes :
-
-```text
-GG_Direction
-GG_RH
-GG_Ventes
-GG_Informatique
-```
-
-Question associée :
-
-> À quel service appartient l'utilisateur ?
-
-### Groupes Domain Local
-
-Ils représentent l'accès à une ressource :
-
-```text
-DL_Direction_Modification
-DL_RH_Modification
-DL_Ventes_Modification
-DL_Informatique_Modification
-```
-
-Question associée :
-
-> Quel droit doit être accordé sur cette ressource ?
-
-Cette séparation facilite fortement l'administration.
-
----
-
-# Exemple d'évolution
+## Exemple d'évolution
 
 Si un nouvel utilisateur rejoint le service RH :
 
@@ -579,7 +476,7 @@ le nouvel utilisateur hérite automatiquement des droits prévus pour son servic
 
 ---
 
-# Avantages de l'organisation retenue
+## Avantages de l'organisation retenue
 
 Cette architecture Active Directory apporte plusieurs avantages :
 
@@ -595,7 +492,7 @@ Cette architecture Active Directory apporte plusieurs avantages :
 
 ---
 
-# Validation
+## Validation
 
 À l'issue de cette étape :
 
