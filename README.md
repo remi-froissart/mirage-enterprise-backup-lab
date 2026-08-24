@@ -73,9 +73,9 @@ Cette infrastructure est un environnement de laboratoire exécuté sur un unique
 
 La stratégie de sauvegarde ne respecte donc pas intégralement la règle **3-2-1**, qui recommande :
 
-- 3 copies des données ;
-- 2 supports ou systèmes de stockage distincts ;
-- 1 copie hors site.
+- 3 copies des données au total : les données de production et 2 sauvegardes ;
+- 2 supports de stockage distincts ;
+- 1 copie conservée hors site.
 
 Dans ce lab, VEEAM01 et NAS01 sont volontairement séparés de l'hyperviseur ESXI01, ce qui permet de conserver l'infrastructure de sauvegarde disponible lors de la perte d'une VM hébergée sur ESXi.
 
