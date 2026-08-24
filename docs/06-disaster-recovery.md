@@ -33,7 +33,7 @@ Le scénario doit permettre de retrouver :
 
 ---
 
-# Scénario de sinistre
+## Scénario de sinistre
 
 Le serveur concerné est :
 
@@ -63,37 +63,35 @@ La perte de cette machine entraîne donc l'indisponibilité des différents part
 
 ---
 
-# Situation avant le sinistre
+## Situation avant le sinistre
 
 Avant de simuler la perte de FS01, une sauvegarde valide de la machine est disponible dans Veeam.
 
-La chaîne de protection est :
+La chaîne de protection peut être représentée ainsi :
 
 ```text
-FS01
-   │
-   │ Backup
-   ▼
 ESXI01
    │
-   ▼
-VEEAM01
-   │
-   ▼
-NAS01-Hardened
-   │
-   ▼
-/data/veeam
-   │
-   ▼
-Restore point FS01
+   └── FS01
+         │
+         │ Backup orchestré par VEEAM01
+         ▼
+    NAS01-Hardened
+         │
+         ▼
+    /data/veeam
+         │
+         ▼
+    Restore point FS01
 ```
+
+VEEAM01 orchestre les opérations de sauvegarde tandis que les fichiers de backup sont stockés sur `NAS01-Hardened`.
 
 Le repository étant hébergé en dehors d'ESXI01, la sauvegarde reste disponible même si la machine virtuelle de production disparaît.
 
 ---
 
-# Simulation de la perte de FS01
+## Simulation de la perte de FS01
 
 La machine virtuelle FS01 a été volontairement supprimée de l'environnement ESXi afin de simuler une perte complète du serveur.
 
@@ -109,18 +107,7 @@ ESXI01
     ✗
 ```
 
-Les autres composants de l'infrastructure restent disponibles :
-
-```text
-DC01
-✓
-
-VEEAM01
-✓
-
-NAS01-Hardened
-✓
-```
+Les autres VM d'ESXI01 restent présentes et l'infrastructure de sauvegarde VEEAM01/NAS01-Hardened demeure disponible en dehors de l'hyperviseur protégé.
 
 La sauvegarde de FS01 n'étant pas stockée sur ESXI01, elle reste exploitable depuis Veeam.
 
@@ -136,7 +123,7 @@ Le scénario simule donc bien une perte complète de la machine virtuelle du ser
 
 ---
 
-# Impact de la perte du serveur
+## Impact de la perte du serveur
 
 Sans FS01, les ressources suivantes deviennent indisponibles :
 
@@ -171,7 +158,7 @@ L'objectif du Disaster Recovery est de rétablir cette chaîne.
 
 ---
 
-# Choix du mode de restauration
+## Choix du mode de restauration
 
 Dans Veeam Backup & Replication, le backup de FS01 reste disponible malgré l'absence de la machine virtuelle originale.
 
@@ -202,7 +189,7 @@ FS01 restauré
 
 ---
 
-# Restauration de la machine virtuelle
+## Restauration de la machine virtuelle
 
 Le restore point de FS01 a été sélectionné dans Veeam.
 
@@ -248,15 +235,15 @@ Veeam utilise les données présentes dans le repository afin de reconstruire la
 
 ---
 
-# Chaîne de restauration
+## Chaîne de restauration
 
-Le flux peut être représenté ainsi :
+Le flux logique peut être représenté ainsi :
 
 ```text
 NAS01-Hardened
 192.168.100.130
         │
-        │ Backup FS01
+        │ Restore point FS01
         ▼
 VEEAM01
 192.168.100.120
@@ -296,25 +283,7 @@ Restore completed successfully
 
 ---
 
-# Retour de FS01 dans ESXi
-
-Une fois la restauration terminée, FS01 est de nouveau présent dans l'inventaire de l'hyperviseur.
-
-La machine restaurée retrouve notamment :
-
-```text
-FS01
-├── Windows Server 2022 Core
-├── configuration système
-├── configuration réseau
-└── disque de données
-```
-
-Le serveur peut alors être redémarré et les services vérifiés.
-
----
-
-# Vérification des ressources SMB
+## Vérification des ressources SMB
 
 Après restauration de FS01, l'accessibilité des quatre principaux partages métier a été contrôlée avec PowerShell :
 
@@ -340,7 +309,7 @@ La restauration complète de la machine virtuelle a donc permis de remettre en s
 
 ---
 
-# Vérification des données
+## Vérification des données
 
 La restauration de la machine virtuelle doit également permettre de retrouver le contenu du disque de données.
 
@@ -365,19 +334,13 @@ La restauration ne permet donc pas seulement de récupérer le système d'exploi
 
 ---
 
-# Validation depuis une session utilisateur
+## Validation depuis une session utilisateur
 
-Une validation supplémentaire a été réalisée depuis une session utilisateur du domaine appartenant au service RH.
+Une validation fonctionnelle a également été réalisée depuis une session utilisateur du domaine appartenant au service RH.
 
-Le lecteur réseau :
+![Validation du partage RH après Disaster Recovery](../images/disaster-recovery/05-validation-utilisateur-rh.png)
 
-```text
-S:
-```
-
-est de nouveau disponible.
-
-Pour cette session, il pointe vers :
+Le lecteur réseau `RH (S:)` est de nouveau disponible et pointe vers :
 
 ```text
 \\FS01\RH
@@ -390,26 +353,13 @@ employes.xlsx
 Procédures.txt
 ```
 
-### Validation fonctionnelle côté utilisateur
-
-La disponibilité du service a également été vérifiée depuis une session utilisateur RH :
-
-![Validation du partage RH après Disaster Recovery](../images/disaster-recovery/05-validation-utilisateur-rh.png)
-
-Le lecteur réseau `RH (S:)` est de nouveau disponible et contient notamment :
-
-```text
-employes.xlsx
-Procédures
-```
-
 Cette validation confirme que la restauration ne s'est pas limitée au retour de la machine virtuelle : les ressources sont de nouveau accessibles depuis une véritable session utilisateur du domaine.
 
-Cette vérification est importante car elle valide toute la chaîne et pas uniquement le démarrage de la machine virtuelle.
+Cette vérification valide donc le retour fonctionnel du service et pas uniquement le démarrage de la machine virtuelle.
 
 ---
 
-# Chaîne fonctionnelle après restauration
+## Chaîne fonctionnelle après restauration
 
 Après le Disaster Recovery, la chaîne complète est de nouveau opérationnelle :
 
@@ -446,7 +396,7 @@ Les mécanismes configurés dans les étapes précédentes continuent donc de fo
 
 ---
 
-# Du File Level Restore au Disaster Recovery
+## Du File Level Restore au Disaster Recovery
 
 Deux niveaux de restauration ont maintenant été testés dans le lab.
 
@@ -455,79 +405,25 @@ Deux niveaux de restauration ont maintenant été testés dans le lab.
 | Suppression d'un fichier | File Level Restore |
 | Perte complète de FS01 | Entire VM Restore |
 
-Dans le premier scénario :
+Le File Level Restore permet de restaurer un élément précis sans reconstruire l'intégralité de la machine virtuelle.
 
-```text
-FS01 fonctionne
-      │
-      └── employes.xlsx supprimé
-                │
-                ▼
-        File Level Restore
-```
-
-Dans le second :
-
-```text
-FS01 perdu
-     │
-     ▼
-Entire VM Restore
-     │
-     ▼
-FS01 complet restauré
-```
+L'Entire VM Restore est utilisé lorsque la machine elle-même doit être restaurée.
 
 Cela permet de choisir une méthode de restauration proportionnée à l'incident rencontré.
 
 ---
 
-# Importance de la séparation des sauvegardes
+## Séparation de l'infrastructure de sauvegarde
 
-Ce test valide également le choix architectural réalisé au début du projet.
+Le scénario valide concrètement le choix architectural présenté précédemment : VEEAM01 et NAS01-Hardened ne sont pas hébergés dans ESXI01.
 
-VEEAM01 et NAS01 sont hébergés en dehors d'ESXI01 :
+La suppression de FS01 n'a donc pas entraîné la perte de son restore point, qui est resté accessible depuis l'infrastructure de sauvegarde.
 
-```text
-VMware Workstation Pro
-│
-├── ESXI01
-│   ├── FW01
-│   ├── DC01
-│   ├── FS01
-│   └── CLT-W10-01
-│
-├── VEEAM01
-│
-└── NAS01
-```
-
-Si les sauvegardes avaient été stockées uniquement dans l'environnement ESXi protégé, une perte de celui-ci aurait pu rendre simultanément indisponibles :
-
-```text
-Production
-+
-Sauvegardes
-```
-
-Avec l'architecture retenue :
-
-```text
-Production ESXi
-      ✗
-
-Infrastructure Veeam
-      ✓
-
-Hardened Repository
-      ✓
-```
-
-La restauration reste possible.
+Cette séparation reste logique et non physique, puisque l'ensemble du lab repose sur un même hôte VMware Workstation Pro, comme précisé dans les limites du projet.
 
 ---
 
-# Du backup au PRA
+## Du backup à la reprise après sinistre
 
 Le projet ne valide donc pas uniquement la création d'un fichier de sauvegarde.
 
@@ -537,13 +433,13 @@ La chaîne testée est :
 Infrastructure de production
           │
           ▼
-      Backup FS01
+       Backup FS01
           │
           ▼
 Linux Hardened Repository
           │
           ▼
-     Immutabilité
+      Immutabilité
           │
           ▼
 Simulation d'un sinistre
@@ -565,31 +461,25 @@ Le backup devient réellement utile lorsqu'il est possible de démontrer qu'il p
 
 ---
 
-# Validation finale
+## Validation finale
 
 À l'issue du scénario de Disaster Recovery :
 
-- une sauvegarde complète de FS01 était disponible sur `NAS01-Hardened` ;
-- FS01 a été volontairement supprimé afin de simuler une perte complète ;
-- VEEAM01 est resté disponible ;
-- NAS01 et les backups sont restés disponibles ;
-- le restore point de FS01 a pu être utilisé ;
-- une restauration complète de la VM a été effectuée avec `Entire VM Restore` ;
-- FS01 est revenu dans l'environnement ESXi ;
-- le serveur a retrouvé son disque de données ;
-- `\\FS01\Direction` est accessible ;
-- `\\FS01\RH` est accessible ;
-- `\\FS01\Ventes` est accessible ;
-- `\\FS01\Informatique` est accessible ;
-- les données métier sont présentes ;
+- une sauvegarde valide de FS01 était disponible sur `NAS01-Hardened` ;
+- FS01 a été volontairement supprimé de l'environnement ESXi ;
+- le restore point est resté disponible ;
+- une restauration complète a été effectuée avec `Entire VM Restore` ;
+- FS01 a retrouvé son système et son disque de données ;
+- les quatre partages métier sont redevenus accessibles ;
+- les données ont été conservées ;
 - le lecteur réseau `S:` fonctionne de nouveau côté utilisateur ;
 - le contenu du partage RH est de nouveau accessible.
 
-Le scénario démontre donc qu'une perte complète du serveur de fichiers peut être suivie d'une restauration depuis l'infrastructure Veeam séparée de l'hyperviseur protégé.
+Le scénario démontre donc qu'une perte complète du serveur de fichiers peut être suivie d'une restauration fonctionnelle depuis l'infrastructure Veeam.
 
 ---
 
-# Conclusion du lab
+## Conclusion du lab
 
 L'ensemble du projet permet de valider une chaîne complète d'administration et de protection d'une petite infrastructure d'entreprise :
 
