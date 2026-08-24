@@ -53,7 +53,7 @@ mirage\administrateur
 
 ---
 
-# Séparation du système et des données
+## Séparation du système et des données
 
 FS01 possède un disque système ainsi qu'un second disque dédié aux données.
 
@@ -83,7 +83,7 @@ D:
 
 ---
 
-# Arborescence des données
+## Arborescence des données
 
 Une arborescence dédiée a été créée sous :
 
@@ -111,7 +111,7 @@ Le dossier `Ressources` est utilisé pour les éléments communs nécessaires au
 
 ---
 
-## Données de test
+### Données de test
 
 Quelques fichiers ont été créés afin de pouvoir tester les accès, les sauvegardes et les restaurations.
 
@@ -140,7 +140,7 @@ Ces fichiers permettront également de valider ultérieurement les fonctions de 
 
 ---
 
-# Application du modèle AGDLP
+## Application du modèle AGDLP
 
 Les permissions ne sont pas attribuées directement aux utilisateurs.
 
@@ -167,23 +167,9 @@ Dossier du service
 Permission NTFS
 ```
 
-Exemple :
-
-```text
-Alice Martin
-    ↓
-GG_Direction
-    ↓
-DL_Direction_Modification
-    ↓
-D:\Partages\Direction
-    ↓
-Modification
-```
-
 ---
 
-# Permissions NTFS
+## Permissions NTFS
 
 Les permissions NTFS ont été appliquées sur chaque dossier métier.
 
@@ -209,7 +195,7 @@ Le même principe est appliqué aux autres services.
 
 ---
 
-## Exemple avec ICACLS
+### Exemple avec ICACLS
 
 Les permissions peuvent être contrôlées directement depuis FS01 avec :
 
@@ -236,7 +222,7 @@ M  = Modify
 
 Les fichiers et sous-dossiers héritent donc des permissions configurées sur leur dossier métier.
 
-### Validation des permissions NTFS
+#### Validation des permissions NTFS
 
 La configuration a été vérifiée directement sur FS01 avec `icacls` :
 
@@ -246,7 +232,7 @@ La sortie confirme notamment que `DL_Direction_Modification` dispose du droit `M
 
 ---
 
-## Permissions par service
+### Permissions par service
 
 La logique appliquée est :
 
@@ -261,7 +247,7 @@ Les utilisateurs ne sont jamais ajoutés directement dans les ACL.
 
 ---
 
-# Partages SMB
+## Partages SMB
 
 Une fois les permissions NTFS configurées, chaque dossier a été publié comme partage SMB.
 
@@ -282,7 +268,7 @@ Get-SmbShare
 
 ---
 
-## Permissions de partage
+### Permissions de partage
 
 Les permissions SMB suivent également le modèle AGDLP.
 
@@ -296,17 +282,7 @@ MIRAGE\DL_Direction_Modification
     → Change
 ```
 
-Pour RH :
-
-```text
-MIRAGE\Admins du domaine
-    → Full
-
-MIRAGE\DL_RH_Modification
-    → Change
-```
-
-Le même principe est appliqué à Ventes et Informatique.
+Le même principe est appliqué aux partages RH, Ventes et Informatique avec les groupes `DL_*_Modification` correspondants.
 
 Les permissions peuvent être contrôlées avec :
 
@@ -314,13 +290,7 @@ Les permissions peuvent être contrôlées avec :
 Get-SmbShareAccess -Name "Direction"
 ```
 
-ou :
-
-```powershell
-Get-SmbShareAccess -Name "RH"
-```
-
-### Validation des permissions SMB
+#### Validation des permissions SMB
 
 La configuration du partage `Direction` a été vérifiée directement depuis FS01 :
 
@@ -330,7 +300,7 @@ Le groupe `MIRAGE\DL_Direction_Modification` dispose du droit `Change`, tandis q
 
 ---
 
-## NTFS et SMB
+### NTFS et SMB
 
 Lorsqu'un utilisateur accède à une ressource à travers un partage réseau, deux niveaux de permissions sont appliqués :
 
@@ -342,7 +312,7 @@ Permissions NTFS
 Permissions effectives
 ```
 
-Le niveau d'accès réellement accordé est déterminé par la combinaison des deux mécanismes.
+Lors d'un accès à travers un partage réseau, les permissions SMB et NTFS sont toutes les deux évaluées. Le droit effectif correspond au niveau d'accès le plus restrictif résultant de leur combinaison.
 
 Dans ce lab :
 
@@ -353,13 +323,11 @@ Cela permet aux utilisateurs autorisés de créer, modifier et supprimer les fic
 
 ---
 
-# Validation des permissions utilisateur
+### Validation des permissions utilisateur
 
 Les droits ont été testés depuis `CLT-W10-01` avec des sessions utilisateurs du domaine.
 
----
-
-## Exemple : utilisateur Direction
+#### Exemple : utilisateur Direction
 
 Depuis une session appartenant au service Direction, l'accès suivant est autorisé :
 
@@ -386,31 +354,7 @@ Le modèle AGDLP est donc effectivement appliqué aux ressources SMB.
 
 ---
 
-## Exemple : utilisateur RH
-
-Pour un utilisateur membre de :
-
-```text
-GG_RH
-```
-
-la chaîne de permissions est :
-
-```text
-Utilisateur RH
-        ↓
-GG_RH
-        ↓
-DL_RH_Modification
-        ↓
-\\FS01\RH
-```
-
-L'accès au partage RH est autorisé tandis que les ressources des autres services restent protégées.
-
----
-
-# GPO de lecteurs réseau
+## GPO de lecteurs réseau
 
 Afin d'éviter aux utilisateurs de saisir manuellement les chemins UNC, une GPO a été créée pour mapper automatiquement leur partage métier.
 
@@ -432,7 +376,7 @@ mais le chemin cible dépend du groupe de l'utilisateur.
 
 ---
 
-## Mappage par service
+### Mappage par service
 
 La configuration logique est :
 
@@ -453,7 +397,7 @@ mais le contenu correspond automatiquement à son service.
 
 ---
 
-# Item-Level Targeting
+### Item-Level Targeting
 
 Le ciblage est effectué avec **Item-Level Targeting** dans les préférences de stratégie de groupe.
 
@@ -471,23 +415,11 @@ S:
 → \\FS01\Direction
 ```
 
-Pour RH :
-
-```text
-Utilisateur membre du groupe :
-MIRAGE\GG_RH
-```
-
-et :
-
-```text
-S:
-→ \\FS01\RH
-```
+Le même principe est appliqué aux autres services avec leur groupe global et leur chemin UNC respectifs.
 
 Cette méthode évite de créer une GPO différente pour chaque lecteur réseau.
 
-### Configuration dans la GPO
+#### Configuration dans la GPO
 
 La GPO contient une préférence de lecteur pour chaque service. Chaque élément utilise la lettre `S:` mais possède un chemin UNC différent et un ciblage basé sur le groupe global correspondant.
 
@@ -497,7 +429,7 @@ L'exemple affiché montre le ciblage du lecteur Informatique sur les utilisateur
 
 ---
 
-## Validation du lecteur réseau
+### Validation du lecteur réseau
 
 Après application de la GPO, le résultat peut être contrôlé avec :
 
@@ -511,19 +443,7 @@ ou :
 net use
 ```
 
-Pour une session Direction :
-
-```text
-S: → \\FS01\Direction
-```
-
-Pour une session RH :
-
-```text
-S: → \\FS01\RH
-```
-
-### Validation depuis une session RH
+#### Validation depuis une session RH
 
 La configuration a été vérifiée depuis la session de Sophie Bernard.
 
@@ -535,11 +455,11 @@ L'Explorateur Windows affiche le lecteur `RH (S:)` et `Get-PSDrive` confirme qu'
 \\FS01\RH
 ```
 
-Le mappage est donc automatiquement adapté au service de l'utilisateur connecté et le lecteur est automatiquement reconnecté lors de l'ouverture de session.
+Le mappage est donc automatiquement adapté au service de l'utilisateur connecté.
 
 ---
 
-# Ressources pour les fonds d'écran
+## Ressources pour les fonds d'écran
 
 Un partage spécifique a également été créé afin de stocker les ressources utilisées par les GPO.
 
@@ -571,7 +491,7 @@ Cela permet aux postes clients de récupérer les images sans autoriser leur mod
 
 ---
 
-# GPO de fonds d'écran
+## GPO de fonds d'écran
 
 Deux fonds d'écran différents ont été utilisés afin de valider le ciblage des GPO par OU.
 
@@ -595,42 +515,6 @@ Utilisateurs
 
 Le but n'est pas ici de multiplier les fonds d'écran, mais de démontrer qu'une configuration utilisateur peut être appliquée différemment selon son emplacement dans Active Directory.
 
----
-
-## Validation Direction
-
-Lorsqu'un utilisateur de l'OU Direction ouvre une session, le fond d'écran Direction est appliqué.
-
-La session utilisateur peut être vérifiée avec :
-
-```powershell
-whoami
-```
-
-Exemple :
-
-```text
-mirage\alice.martin
-```
-
-Le fond d'écran correspondant à la Direction est alors visible.
-
----
-
-## Validation RH
-
-La même vérification a été réalisée avec une session RH.
-
-Exemple :
-
-```text
-mirage\sophie.bernard
-```
-
-Un fond d'écran spécifique au service Ressources Humaines est appliqué.
-
-Cela confirme que les GPO sont correctement ciblées selon les OU Active Directory.
-
 ### Validation visuelle des GPO
 
 Les deux stratégies ont été testées avec des comptes appartenant à des OU différentes.
@@ -641,11 +525,11 @@ Les deux stratégies ont été testées avec des comptes appartenant à des OU d
 
 À droite, la session d'Alice Martin reçoit le fond d'écran **Direction**.
 
-Cela confirme visuellement que les paramètres utilisateurs sont correctement appliqués selon l'OU du compte connecté.
+Cette validation confirme que les paramètres utilisateurs sont correctement appliqués selon l'OU du compte connecté.
 
 ---
 
-# Chaîne complète côté utilisateur
+## Chaîne complète côté utilisateur
 
 L'ensemble des mécanismes mis en place peut être résumé ainsi :
 
@@ -653,7 +537,7 @@ L'ensemble des mécanismes mis en place peut être résumé ainsi :
 Utilisateur Active Directory
           │
           ▼
-      GG_Service
+       GG_Service
           │
           ▼
 DL_Service_Modification
@@ -662,10 +546,10 @@ DL_Service_Modification
 Permissions NTFS / SMB
           │
           ▼
-     \\FS01\Service
+      \\FS01\Service
           │
           ▼
-     GPO lecteur S:
+      GPO lecteur S:
 ```
 
 En parallèle :
@@ -684,7 +568,7 @@ L'identité, les permissions et la configuration du poste sont donc administrée
 
 ---
 
-# Validation finale
+## Validation finale
 
 À l'issue de cette partie :
 
