@@ -261,7 +261,7 @@ Les statistiques observées lors de cette sauvegarde étaient approximativement 
 | Durée | environ 2 min 39 s |
 | Résultat | Success |
 
-La quantité de données réellement transférée est inférieure au volume logique traité grâce aux mécanismes de réduction et d'optimisation utilisés pendant le backup.
+La quantité de données transférée vers le repository est inférieure au volume traité grâce aux mécanismes de réduction de données utilisés par Veeam pendant la sauvegarde.
 
 ### Validation du job de sauvegarde
 
