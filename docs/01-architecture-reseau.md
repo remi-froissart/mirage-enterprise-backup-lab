@@ -178,7 +178,7 @@ OPNsense assure notamment :
 - l'accès d'ESXI01 au serveur DNS Active Directory ;
 - l'accès d'ESXI01 aux serveurs NTP externes.
 
-Les règles firewall sont limitées aux flux nécessaires.
+Des règles firewall ont été configurées afin d'autoriser les flux nécessaires entre les différents segments du lab.
 
 Par exemple, ESXI01 dispose des flux nécessaires pour joindre le DNS de DC01 et les serveurs NTP externes :
 
