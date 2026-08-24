@@ -526,6 +526,7 @@ Cela permet de couvrir à la fois l'administration systèmes, l'infrastructure r
 
 ---
 
-## Retour
+## Navigation
 
 ⬅️ [05 - Veeam Backup et restauration](05-veeam-backup-restore.md)
+🏠 [Retour au README](../README.md)
