@@ -50,7 +50,7 @@ Construire une petite infrastructure d’entreprise réaliste afin de mettre en 
 
 ## Résultat final
 
-L'infrastructure a été validée jusqu'au scénario de reprise après sinistre : après suppression volontaire de FS01, la machine virtuelle a été restaurée intégralement depuis le repository Veeam hardened.
+L'infrastructure a été validée jusqu'au scénario de reprise après sinistre : après suppression volontaire de FS01, la machine virtuelle a été restaurée intégralement depuis le Linux Hardened Repository `NAS01-Hardened`.
 
 Les partages SMB, les ACL, les données et les lecteurs réseau utilisateurs étaient de nouveau opérationnels après restauration.
 
