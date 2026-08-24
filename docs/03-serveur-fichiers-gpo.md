@@ -236,6 +236,14 @@ M  = Modify
 
 Les fichiers et sous-dossiers héritent donc des permissions configurées sur leur dossier métier.
 
+### Validation des permissions NTFS
+
+La configuration a été vérifiée directement sur FS01 avec `icacls` :
+
+![Permissions NTFS du dossier Direction](../images/file-server-gpo/01-permissions-ntfs.png)
+
+La sortie confirme notamment que `DL_Direction_Modification` dispose du droit `Modification`, avec héritage sur les fichiers et sous-dossiers.
+
 ---
 
 ## Permissions par service
@@ -311,6 +319,18 @@ ou :
 ```powershell
 Get-SmbShareAccess -Name "RH"
 ```
+
+### Validation des permissions SMB
+
+Les permissions du partage `Direction` ont également été vérifiées avec :
+
+```powershell
+Get-SmbShareAccess -Name "Direction"
+```
+
+![Permissions SMB du partage Direction](../images/file-server-gpo/02-permissions-smb.png)
+
+Le groupe `MIRAGE\DL_Direction_Modification` dispose du droit `Change`, tandis que les administrateurs du domaine disposent du contrôle total.
 
 ---
 
@@ -471,6 +491,14 @@ S:
 
 Cette méthode évite de créer une GPO différente pour chaque lecteur réseau.
 
+### Configuration dans la GPO
+
+La GPO contient une préférence de lecteur pour chaque service. Chaque élément utilise la lettre `S:` mais possède un chemin UNC différent et un ciblage basé sur le groupe global correspondant.
+
+![Configuration GPO des lecteurs réseau](../images/file-server-gpo/03-gpo-lecteurs-reseau.png)
+
+L'exemple affiché montre le ciblage du lecteur Informatique sur les utilisateurs membres de `MIRAGE\GG_Informatique`.
+
 ---
 
 ## Validation du lecteur réseau
@@ -499,7 +527,19 @@ Pour une session RH :
 S: → \\FS01\RH
 ```
 
-Le lecteur est automatiquement reconnecté lors de l'ouverture de session.
+### Validation depuis une session RH
+
+La configuration a été vérifiée depuis la session de Sophie Bernard.
+
+![Validation du lecteur réseau RH](../images/file-server-gpo/04-lecteur-rh-validation.png)
+
+L'Explorateur Windows affiche le lecteur `RH (S:)` et `Get-PSDrive` confirme qu'il pointe vers :
+
+```text
+\\FS01\RH
+```
+
+Le mappage est donc automatiquement adapté au service de l'utilisateur connecté et le lecteur est automatiquement reconnecté lors de l'ouverture de session.
 
 ---
 
@@ -594,6 +634,18 @@ mirage\sophie.bernard
 Un fond d'écran spécifique au service Ressources Humaines est appliqué.
 
 Cela confirme que les GPO sont correctement ciblées selon les OU Active Directory.
+
+### Validation visuelle des GPO
+
+Les deux stratégies ont été testées avec des comptes appartenant à des OU différentes.
+
+![Validation des fonds d'écran Direction et RH](../images/file-server-gpo/05-wallpapers-direction-rh.png)
+
+À gauche, la session de Sophie Bernard reçoit le fond d'écran **Ressources Humaines**.
+
+À droite, la session d'Alice Martin reçoit le fond d'écran **Direction**.
+
+Cela confirme visuellement que les paramètres utilisateurs sont correctement appliqués selon l'OU du compte connecté.
 
 ---
 
