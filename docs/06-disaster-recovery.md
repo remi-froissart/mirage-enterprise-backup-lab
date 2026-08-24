@@ -124,6 +124,16 @@ NAS01-Hardened
 
 La sauvegarde de FS01 n'étant pas stockée sur ESXI01, elle reste exploitable depuis Veeam.
 
+### Validation de la perte de FS01
+
+Après suppression de la machine virtuelle, l'inventaire ESXi ne contient plus FS01 :
+
+![FS01 absent de l'inventaire ESXi](../images/disaster-recovery/01-fs01-absent.png)
+
+Les machines `FW01`, `DC01` et `CLT-W10-01` restent présentes, tandis que `FS01` a disparu de l'hyperviseur.
+
+Le scénario simule donc bien une perte complète de la machine virtuelle du serveur de fichiers.
+
 ---
 
 # Impact de la perte du serveur
@@ -216,6 +226,24 @@ La destination est l'hyperviseur :
 ESXI01
 ```
 
+### Paramètres de restauration
+
+Avant le lancement de l'opération, Veeam affiche un résumé de la restauration :
+
+![Résumé du Entire VM Restore de FS01](../images/disaster-recovery/02-entire-vm-restore-summary.png)
+
+La configuration confirme notamment :
+
+```text
+Original machine name : FS01
+New machine name      : FS01
+Target host           : 192.168.110.10
+Target datastore      : datastore01
+Network mapping       : PG-LAN -> PG-LAN
+```
+
+L'option permettant de remettre automatiquement la machine sous tension après la restauration est également activée.
+
 Veeam utilise les données présentes dans le repository afin de reconstruire la machine virtuelle.
 
 ---
@@ -244,6 +272,27 @@ FS01
 ```
 
 Cette architecture permet de restaurer une machine hébergée sur ESXI01 à partir d'une infrastructure de sauvegarde indépendante.
+
+### Validation du Full VM Restore
+
+La restauration complète de FS01 s'est terminée avec succès :
+
+![Restauration complète réussie de FS01](../images/disaster-recovery/03-entire-vm-restore-success.png)
+
+Veeam confirme notamment :
+
+```text
+Restore type : Full VM Restore
+Status       : Success
+```
+
+La session montre également la restauration des deux disques virtuels de FS01, l'enregistrement de la machine sur ESXI01 puis sa remise sous tension.
+
+L'opération se termine avec :
+
+```text
+Restore completed successfully
+```
 
 ---
 
@@ -294,6 +343,29 @@ La vérification donne :
 | `\\FS01\RH` | True |
 | `\\FS01\Ventes` | True |
 | `\\FS01\Informatique` | True |
+
+### Validation des partages après restauration
+
+L'accessibilité des quatre partages métier a été contrôlée avec PowerShell :
+
+![Validation des partages SMB après restauration](../images/disaster-recovery/04-partages-restaures.png)
+
+Les commandes :
+
+```powershell
+Test-Path \\FS01\Direction
+Test-Path \\FS01\RH
+Test-Path \\FS01\Ventes
+Test-Path \\FS01\Informatique
+```
+
+retournent toutes :
+
+```text
+True
+```
+
+La restauration de la machine virtuelle a donc permis de remettre en service les quatre principaux partages SMB de FS01.
 
 ---
 
@@ -346,6 +418,21 @@ L'utilisateur retrouve notamment :
 employes.xlsx
 Procédures.txt
 ```
+
+### Validation fonctionnelle côté utilisateur
+
+La disponibilité du service a également été vérifiée depuis une session utilisateur RH :
+
+![Validation du partage RH après Disaster Recovery](../images/disaster-recovery/05-validation-utilisateur-rh.png)
+
+Le lecteur réseau `RH (S:)` est de nouveau disponible et contient notamment :
+
+```text
+employes.xlsx
+Procédures
+```
+
+Cette validation confirme que la restauration ne s'est pas limitée au retour de la machine virtuelle : les ressources sont de nouveau accessibles depuis une véritable session utilisateur du domaine.
 
 Cette vérification est importante car elle valide toute la chaîne et pas uniquement le démarrage de la machine virtuelle.
 
