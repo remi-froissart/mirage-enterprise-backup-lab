@@ -59,6 +59,24 @@ Le scénario de reprise après sinistre a été validé :
 5. conservation des ACL et des données ;
 6. lecteurs réseau utilisateurs de nouveau opérationnels.
 
+## Scénarios validés
+
+Le lab ne se limite pas au déploiement de l'infrastructure. Plusieurs scénarios ont été testés de bout en bout :
+
+- contrôle des accès aux partages SMB selon le modèle AGDLP ;
+- attribution automatique des lecteurs réseau par GPO ;
+- sauvegarde complète d'une machine virtuelle avec Veeam ;
+- restauration granulaire d'un fichier supprimé ;
+- tentative de suppression d'un backup immutable ;
+- suppression complète du serveur de fichiers FS01 ;
+- restauration complète de la VM avec Entire VM Restore ;
+- validation des partages et des données depuis une session utilisateur après restauration.
+
 ## Documentation détaillée
 
-La documentation complète sera disponible dans le dossier [`docs/`](docs/).
+- [01 - Architecture réseau](docs/01-architecture-reseau.md)
+- [02 - Active Directory et AGDLP](docs/02-active-directory-agdlp.md)
+- [03 - Serveur de fichiers et GPO](docs/03-serveur-fichiers-gpo.md)
+- [04 - NAS XFS et Hardened Repository](docs/04-nas-xfs-hardened-repository.md)
+- [05 - Veeam Backup et restauration](docs/05-veeam-backup-restore.md)
+- [06 - Disaster Recovery](docs/06-disaster-recovery.md)
