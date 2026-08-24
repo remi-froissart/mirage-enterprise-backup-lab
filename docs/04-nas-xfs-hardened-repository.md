@@ -215,6 +215,19 @@ Sys. de fichiers  Type  Taille  Utilisé  Dispo  Monté sur
 
 Le système de fichiers XFS est donc correctement monté.
 
+### Validation du stockage XFS
+
+La configuration finale du stockage a été vérifiée avec :
+
+```bash
+lsblk
+df -hT /data
+```
+
+![Validation du volume XFS de NAS01](../images/hardened-repository/01-stockage-lsblk.png)
+
+La sortie confirme que le disque dédié de 200 Go est partitionné en `/dev/sdb1`, formaté en **XFS** et monté sous `/data`.
+
 ---
 
 # Montage persistant
@@ -478,6 +491,20 @@ Le mount server Windows utilisé est :
 VEEAM01
 ```
 
+### Configuration du Hardened Repository
+
+La configuration finale du repository est visible directement dans Veeam Backup & Replication :
+
+![Configuration du Hardened Repository Veeam](../images/hardened-repository/02-hardened-repository-settings.png)
+
+Veeam reconnaît `NAS01-Hardened` comme un repository de type **Hardened** utilisant `/data/veeam`.
+
+La configuration confirme également :
+
+- **Fast Clone sur XFS** activé ;
+- **7 jours d'immutabilité** ;
+- **2 tâches simultanées maximum**.
+
 ---
 
 # Fast Clone avec XFS
@@ -589,6 +616,21 @@ Active: inactive (dead)
 Le port SSH n'est donc plus exposé en permanence après la phase d'installation.
 
 En cas d'opération de maintenance nécessitant de nouveau SSH, le service pourra être réactivé temporairement puis désactivé une fois l'intervention terminée.
+
+---
+
+### Validation du durcissement
+
+L'état final de NAS01 a été contrôlé après le déploiement du repository :
+
+```bash
+id veeamrepo
+sudo systemctl status ssh --no-pager
+```
+
+![Validation du durcissement de NAS01](../images/hardened-repository/03-post-deployment-hardening.png)
+
+Le compte `veeamrepo` ne fait plus partie du groupe `sudo` et le service SSH est arrêté et désactivé après le déploiement.
 
 ---
 
