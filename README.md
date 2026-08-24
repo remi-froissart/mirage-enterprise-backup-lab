@@ -1,6 +1,6 @@
 # Mirage Enterprise Backup Lab
 
-Infrastructure de lab d’entreprise : ESXi nested, OPNsense, Active Directory, serveur de fichiers, GPO/AGDLP, Veeam Backup & Replication et NAS Debian/XFS avec hardened repository, immutabilité et tests de restauration.
+Infrastructure de lab d’entreprise : ESXi nested, OPNsense, Active Directory, serveur de fichiers, GPO/AGDLP, Veeam Backup & Replication et NAS Debian/XFS avec **Linux Hardened Repository**, immutabilité et tests de restauration.
 
 ## Objectif du projet
 
@@ -39,7 +39,7 @@ Construire une petite infrastructure d’entreprise réaliste afin de mettre en 
 - Modèle AGDLP
 - ACL NTFS et permissions SMB
 - Lecteurs réseau mappés par GPO
-- Wallpapers par service via GPO
+- Fonds d'écran par service via GPO
 - Repository Veeam séparé de l’hyperviseur
 - XFS + Fast Clone
 - Sauvegardes immuables pendant 7 jours
@@ -50,14 +50,9 @@ Construire une petite infrastructure d’entreprise réaliste afin de mettre en 
 
 ## Résultat final
 
-Le scénario de reprise après sinistre a été validé :
+L'infrastructure a été validée jusqu'au scénario de reprise après sinistre : après suppression volontaire de FS01, la machine virtuelle a été restaurée intégralement depuis le repository Veeam hardened.
 
-1. sauvegarde de FS01 vers le repository hardened ;
-2. suppression volontaire de la VM FS01 ;
-3. restauration complète depuis Veeam ;
-4. restauration des partages SMB ;
-5. conservation des ACL et des données ;
-6. lecteurs réseau utilisateurs de nouveau opérationnels.
+Les partages SMB, les ACL, les données et les lecteurs réseau utilisateurs étaient de nouveau opérationnels après restauration.
 
 ## Scénarios validés
 
