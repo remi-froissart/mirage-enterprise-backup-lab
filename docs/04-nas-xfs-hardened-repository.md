@@ -21,50 +21,19 @@ Les principaux objectifs sont :
 
 ---
 
-# Séparation de l'infrastructure de sauvegarde
+## Séparation de l'infrastructure de sauvegarde
 
 NAS01 n'est pas hébergé dans ESXI01.
 
-Il est exécuté directement dans **VMware Workstation Pro**, au même niveau que VEEAM01.
+Il est exécuté directement dans **VMware Workstation Pro**, au même niveau que VEEAM01. Le repository reste ainsi indépendant des machines virtuelles hébergées sur l'hyperviseur ESXi protégé.
 
-L'architecture retenue est donc :
+En cas de perte des VM présentes sur ESXI01, VEEAM01 et NAS01 restent disponibles afin de permettre leur restauration.
 
-```text
-VMware Workstation Pro
-│
-├── ESXI01
-│   ├── FW01
-│   ├── DC01
-│   ├── FS01
-│   └── CLT-W10-01
-│
-├── VEEAM01
-│
-└── NAS01
-```
-
-Ce choix permet d'éviter qu'une perte complète de l'hyperviseur entraîne également la perte du repository de sauvegarde.
-
-En cas de défaillance d'ESXI01 :
-
-```text
-ESXI01
-   ✗
-   │
-   └── VM de production indisponibles
-
-VEEAM01
-   ✓
-
-NAS01
-   ✓
-```
-
-Le serveur de sauvegarde et les données nécessaires à la restauration restent donc indépendants de l'hyperviseur protégé.
+Cette séparation est toutefois **logique et non physique**, puisque l'ensemble du lab fonctionne sur le même ordinateur hôte. Cette limite ainsi que le non-respect complet de la règle 3-2-1 sont détaillés dans le README.
 
 ---
 
-# Serveur NAS01
+## Serveur NAS01
 
 Le système utilisé pour le repository est Debian.
 
@@ -82,9 +51,7 @@ NAS01 n'est pas membre du domaine Active Directory.
 
 Cette séparation limite la dépendance entre les identités du domaine et l'infrastructure de sauvegarde.
 
----
-
-## Configuration réseau
+### Configuration réseau
 
 L'interface principale utilise une adresse IPv4 statique.
 
@@ -123,7 +90,7 @@ hostnamectl
 
 ---
 
-# Organisation du stockage
+## Organisation du stockage
 
 NAS01 possède deux disques virtuels.
 
@@ -154,7 +121,7 @@ sdb     200G disk
 
 ---
 
-# Création du volume XFS
+## Création du volume XFS
 
 Une partition dédiée a été créée sur le second disque :
 
@@ -180,7 +147,7 @@ Le support de `reflink` est particulièrement intéressant pour Veeam, car il pe
 
 ---
 
-# Point de montage
+## Point de montage
 
 Le volume est monté sous :
 
@@ -230,7 +197,7 @@ La sortie confirme que le disque dédié de 200 Go est partitionné en `/dev/sdb
 
 ---
 
-# Montage persistant
+## Montage persistant
 
 Afin que le volume soit automatiquement remonté après un redémarrage de NAS01, son UUID a été récupéré avec :
 
@@ -274,31 +241,7 @@ Le montage est donc persistant.
 
 ---
 
-# Test d'écriture
-
-Avant d'utiliser le volume avec Veeam, une écriture simple a été réalisée :
-
-```bash
-sudo touch /data/test.txt
-```
-
-puis vérifiée avec :
-
-```bash
-ls -l /data
-```
-
-Le fichier de test a ensuite été supprimé :
-
-```bash
-sudo rm /data/test.txt
-```
-
-Cette étape confirme que le volume est correctement accessible en écriture.
-
----
-
-# Répertoire dédié à Veeam
+## Répertoire dédié à Veeam
 
 Un répertoire spécifique a été créé pour recevoir les sauvegardes :
 
@@ -342,11 +285,11 @@ Le résultat est :
 drwx------ veeamrepo veeamrepo /data/veeam
 ```
 
-Seul le compte dédié dispose donc d'un accès direct au répertoire de sauvegarde.
+Les permissions Unix classiques limitent donc l'accès au répertoire au compte `veeamrepo`, en dehors des comptes disposant de privilèges administratifs tels que `root`.
 
 ---
 
-# Préparation du compte pour le déploiement Veeam
+## Préparation du compte pour le déploiement Veeam
 
 Pendant la phase initiale de déploiement, le compte `veeamrepo` doit permettre à Veeam d'installer les composants nécessaires sur NAS01.
 
@@ -368,7 +311,7 @@ Cette élévation n'est conservée que pendant la phase de déploiement.
 
 ---
 
-# Ajout de NAS01 dans Veeam
+## Ajout de NAS01 dans Veeam
 
 NAS01 a ensuite été ajouté dans **Veeam Backup & Replication** comme serveur Linux.
 
@@ -384,21 +327,13 @@ NAS01
 192.168.100.130
 ```
 
-La connectivité avait été validée depuis VEEAM01 avec :
+Cette connexion SSH permet à Veeam de déployer les composants nécessaires sur NAS01.
 
-```powershell
-Test-NetConnection 192.168.100.130 -Port 22
-```
-
-Résultat :
-
-```text
-TcpTestSucceeded : True
-```
+La connectivité entre VEEAM01 et NAS01 avait été validée lors de la préparation de l'architecture réseau.
 
 ---
 
-# Single-use credentials
+## Single-use credentials
 
 Pour le déploiement du Hardened Repository, Veeam utilise l'option :
 
@@ -418,7 +353,7 @@ Cette approche permet de réduire l'exposition d'un compte Linux disposant de pr
 
 ---
 
-# Déploiement des composants Veeam
+## Déploiement des composants Veeam
 
 Lors de l'ajout de NAS01, Veeam déploie les composants nécessaires au fonctionnement du repository.
 
@@ -436,7 +371,7 @@ Le Data Mover permet les transferts de données nécessaires entre l'infrastruct
 
 ---
 
-# Création du Hardened Repository
+## Création du Hardened Repository
 
 Le repository a été créé dans Veeam avec le type :
 
@@ -464,9 +399,7 @@ Veeam détecte automatiquement que `/data` correspond au volume :
 
 formaté en XFS.
 
----
-
-## Paramètres du repository
+### Paramètres du repository
 
 Le repository créé est nommé :
 
@@ -507,7 +440,7 @@ La configuration confirme également :
 
 ---
 
-# Fast Clone avec XFS
+## Fast Clone avec XFS
 
 Le repository utilise l'option :
 
@@ -535,7 +468,7 @@ il est compatible avec ce mécanisme.
 
 ---
 
-# Immutabilité
+## Immutabilité
 
 Le repository a été configuré avec :
 
@@ -559,7 +492,7 @@ Fichier protégé
       └── Jour 7
               │
               ▼
-       Fin de l'immutabilité
+        Fin de l'immutabilité
 ```
 
 Cette protection permet notamment de limiter l'impact d'une suppression accidentelle ou d'une compromission du serveur Veeam.
@@ -568,11 +501,13 @@ L'immutabilité sera testée concrètement dans une étape ultérieure.
 
 ---
 
-# Durcissement après déploiement
+## Durcissement après déploiement
 
 Une fois NAS01 enregistré et le Hardened Repository créé, les privilèges temporaires utilisés pour le déploiement ne sont plus nécessaires.
 
-Le compte `veeamrepo` a donc été retiré du groupe `sudo` :
+### Retrait des privilèges sudo
+
+Le compte `veeamrepo` a été retiré du groupe `sudo` :
 
 ```bash
 sudo deluser veeamrepo sudo
@@ -586,11 +521,7 @@ id veeamrepo
 
 confirme que le compte ne fait plus partie du groupe `sudo`.
 
-Les groupes présents après le déploiement correspondent principalement aux composants Veeam installés sur le serveur.
-
----
-
-# Désactivation de SSH
+### Désactivation de SSH
 
 SSH était nécessaire pour le déploiement initial.
 
@@ -617,8 +548,6 @@ Le port SSH n'est donc plus exposé en permanence après la phase d'installation
 
 En cas d'opération de maintenance nécessitant de nouveau SSH, le service pourra être réactivé temporairement puis désactivé une fois l'intervention terminée.
 
----
-
 ### Validation du durcissement
 
 L'état final de NAS01 a été contrôlé après le déploiement du repository :
@@ -634,33 +563,7 @@ Le compte `veeamrepo` ne fait plus partie du groupe `sudo` et le service SSH est
 
 ---
 
-# Principe de durcissement retenu
-
-Le fonctionnement du repository peut être résumé ainsi :
-
-```text
-VEEAM01
-   │
-   │ Déploiement initial
-   │ via identifiants à usage unique
-   ▼
-NAS01
-   │
-   ├── Debian 13
-   ├── hors domaine
-   ├── XFS
-   ├── /data/veeam
-   ├── compte veeamrepo
-   ├── sudo retiré après installation
-   ├── SSH désactivé
-   └── backups immuables 7 jours
-```
-
-L'objectif est de réduire le nombre de mécanismes permettant à un attaquant ayant compromis VEEAM01 d'obtenir également un accès administratif persistant au repository Linux.
-
----
-
-# Vérification du repository
+## Vérification du repository
 
 Après sa création, une synchronisation du repository a été réalisée depuis Veeam.
 
@@ -678,7 +581,7 @@ Le repository est donc reconnu et opérationnel.
 
 ---
 
-# Chaîne de sauvegarde préparée
+## Chaîne de sauvegarde préparée
 
 L'infrastructure est maintenant prête pour recevoir les sauvegardes :
 
@@ -707,7 +610,7 @@ La production, le serveur de sauvegarde et le stockage sont ainsi séparés en p
 
 ---
 
-# Validation finale
+## Validation finale
 
 À l'issue de cette partie :
 
