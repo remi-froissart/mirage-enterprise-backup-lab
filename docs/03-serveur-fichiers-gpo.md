@@ -322,11 +322,7 @@ Get-SmbShareAccess -Name "RH"
 
 ### Validation des permissions SMB
 
-Les permissions du partage `Direction` ont également été vérifiées avec :
-
-```powershell
-Get-SmbShareAccess -Name "Direction"
-```
+La configuration du partage `Direction` a été vérifiée directement depuis FS01 :
 
 ![Permissions SMB du partage Direction](../images/file-server-gpo/02-permissions-smb.png)
 
