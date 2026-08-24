@@ -342,7 +342,7 @@ Cette logique sera exploitée dans les parties consacrées à Veeam et au Linux 
 
 ## Tests de connectivité
 
-Les principaux flux nécessaires ont été testés avant la mise en place de la sauvegarde.
+En complément des validations DNS et NTP précédentes, les principaux flux nécessaires à la future infrastructure de sauvegarde ont été contrôlés.
 
 ### ESXI01 vers OPNsense
 
@@ -350,17 +350,7 @@ Les principaux flux nécessaires ont été testés avant la mise en place de la 
 vmkping 192.168.110.250
 ```
 
-### ESXI01 vers le DNS Active Directory
-
-```bash
-nslookup dc01.ad.mirage-lab.cloud
-```
-
-### Résolution Internet depuis ESXI01
-
-```bash
-nslookup google.com
-```
+Ce test permet de vérifier la connectivité entre l'interface de management d'ESXI01 et sa passerelle OPNsense.
 
 ### VEEAM01 vers NAS01
 
@@ -390,7 +380,7 @@ Résultat :
 TcpTestSucceeded : True
 ```
 
-Ces tests confirment que VEEAM01 peut communiquer avec l'hyperviseur et le repository tout en restant séparé d'ESXI01.
+Ces tests confirment que VEEAM01 peut communiquer avec l'hyperviseur et le repository tout en restant hébergé en dehors d'ESXI01.
 
 ---
 
