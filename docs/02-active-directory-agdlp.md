@@ -245,7 +245,7 @@ ou :
 ```text
 Utilisateur RH
     ↓
-GG_RH
+  GG_RH
 ```
 
 Le groupe global représente donc essentiellement :
