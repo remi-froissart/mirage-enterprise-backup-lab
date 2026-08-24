@@ -153,6 +153,16 @@ ESXI01
 └── CLT-W10-01
 ```
 
+### Validation de l'inventaire ESXi
+
+Après l'ajout de l'hyperviseur, les machines virtuelles hébergées sur ESXI01 sont visibles directement dans l'inventaire Veeam :
+
+![Inventaire ESXi dans Veeam](../images/veeam-backup-restore/01-esxi-inventory.png)
+
+Veeam identifie correctement `FW01`, `DC01`, `FS01` et `CLT-W10-01` ainsi que leurs systèmes invités.
+
+L'hyperviseur est donc correctement intégré à l'infrastructure de sauvegarde.
+
 Veeam peut ainsi sélectionner directement les machines virtuelles à protéger.
 
 ---
@@ -252,6 +262,24 @@ Les statistiques observées lors de cette sauvegarde étaient approximativement 
 | Résultat | Success |
 
 La quantité de données réellement transférée est inférieure au volume logique traité grâce aux mécanismes de réduction et d'optimisation utilisés pendant le backup.
+
+### Validation du job de sauvegarde
+
+L'exécution du job `Backup FS01` s'est terminée avec succès :
+
+![Sauvegarde réussie de FS01](../images/veeam-backup-restore/02-fs01-backup-success.png)
+
+La session confirme notamment :
+
+- `14,7 GB` de données traitées ;
+- `11 GB` de données lues ;
+- `6,7 GB` transférés ;
+- un débit de traitement de `153 MB/s` ;
+- une durée totale de `02:39` ;
+- l'activation du **Changed Block Tracking** ;
+- `1 VM processed successfully`.
+
+Le repository utilisé est `NAS01-Hardened`.
 
 ---
 
@@ -423,6 +451,31 @@ Le résultat observé était :
 
 Le fichier a donc été replacé directement dans son dossier d'origine.
 
+### Validation du File Level Restore
+
+Le résultat de la restauration est visible directement dans Veeam Backup Browser :
+
+![Restauration granulaire du fichier employes.xlsx](../images/veeam-backup-restore/03-file-level-restore.png)
+
+Le restore point contient bien le fichier `employes.xlsx` dans :
+
+```text
+D:\Partages\RH
+```
+
+Veeam confirme ensuite :
+
+```text
+Files to restore : 1
+Restored files   : 1
+Success          : 1
+Errors           : 0
+```
+
+La restauration a été réalisée via la **vSphere Guest Interaction API** et s'est terminée en environ 16 secondes.
+
+Le fichier `D:\Partages\RH\employes.xlsx` a donc bien été replacé sur FS01.
+
 ---
 
 # Validation côté utilisateur
@@ -502,6 +555,28 @@ Unable to delete 1 immutable backup file
 et précise la date à partir de laquelle le fichier pourra être supprimé.
 
 Cela démontre que le backup ne peut pas être effacé normalement avant l'expiration de sa période d'immutabilité.
+
+### Validation de l'immutabilité
+
+Une tentative de suppression physique du backup a été effectuée depuis Veeam avec l'action `Delete from disk`.
+
+![Test de l'immutabilité du backup FS01](../images/veeam-backup-restore/04-immutability-test.png)
+
+Veeam refuse la suppression et retourne notamment :
+
+```text
+Unable to delete 1 immutable backup file
+```
+
+La session indique également :
+
+```text
+0 deleted
+```
+
+et précise la date à partir de laquelle le fichier pourra être supprimé.
+
+Cette vérification confirme que l'immutabilité configurée sur `NAS01-Hardened` est réellement appliquée aux fichiers de sauvegarde.
 
 ---
 
