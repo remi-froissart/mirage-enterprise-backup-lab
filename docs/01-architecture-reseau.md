@@ -394,7 +394,7 @@ Ces tests confirment que VEEAM01 peut communiquer avec l'hyperviseur et le repos
 - la résolution DNS externe fonctionne ;
 - ESXI01 est synchronisé avec un serveur NTP externe ;
 - VEEAM01 peut joindre ESXI01 ;
-- VEEAM01 peut joindre NAS01 ;
+- VEEAM01 peut communiquer avec NAS01 ;
 - l'infrastructure de sauvegarde reste indépendante d'ESXI01.
 
 Cette architecture constitue la base des services Active Directory, du serveur de fichiers et de la solution de sauvegarde développés dans les étapes suivantes.
