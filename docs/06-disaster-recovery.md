@@ -316,9 +316,7 @@ Le serveur peut alors être redémarré et les services vérifiés.
 
 # Vérification des ressources SMB
 
-La première validation consiste à vérifier que les partages réseau sont de nouveau accessibles.
-
-Depuis un système disposant d'un accès au domaine, les chemins suivants ont été testés :
+Après restauration de FS01, l'accessibilité des quatre principaux partages métier a été contrôlée avec PowerShell :
 
 ```powershell
 Test-Path \\FS01\Direction
@@ -327,15 +325,9 @@ Test-Path \\FS01\Ventes
 Test-Path \\FS01\Informatique
 ```
 
-Les quatre commandes retournent :
+![Validation des partages SMB après restauration](../images/disaster-recovery/04-partages-restaures.png)
 
-```text
-True
-```
-
-Les partages principaux du serveur sont donc de nouveau disponibles.
-
-La vérification donne :
+Les quatre commandes retournent `True`, confirmant que les ressources SMB sont de nouveau accessibles.
 
 | Partage | Résultat |
 |---|---|
@@ -344,28 +336,7 @@ La vérification donne :
 | `\\FS01\Ventes` | True |
 | `\\FS01\Informatique` | True |
 
-### Validation des partages après restauration
-
-L'accessibilité des quatre partages métier a été contrôlée avec PowerShell :
-
-![Validation des partages SMB après restauration](../images/disaster-recovery/04-partages-restaures.png)
-
-Les commandes :
-
-```powershell
-Test-Path \\FS01\Direction
-Test-Path \\FS01\RH
-Test-Path \\FS01\Ventes
-Test-Path \\FS01\Informatique
-```
-
-retournent toutes :
-
-```text
-True
-```
-
-La restauration de la machine virtuelle a donc permis de remettre en service les quatre principaux partages SMB de FS01.
+La restauration complète de la machine virtuelle a donc permis de remettre en service les quatre principaux partages SMB de FS01.
 
 ---
 
