@@ -19,7 +19,7 @@ Après avoir préparé le Linux Hardened Repository sur NAS01, l'objectif est ma
 
 ---
 
-# Serveur VEEAM01
+## Serveur VEEAM01
 
 Veeam Backup & Replication est installé sur un serveur Windows Server dédié.
 
@@ -32,109 +32,41 @@ Veeam Backup & Replication est installé sur un serveur Windows Server dédié.
 | Rôle | Serveur de sauvegarde |
 | Logiciel | Veeam Backup & Replication Community Edition |
 
-VEEAM01 n'est pas hébergé dans ESXI01.
+VEEAM01 est exécuté directement dans VMware Workstation Pro et n'est pas hébergé dans ESXI01.
 
-Il fonctionne directement dans VMware Workstation Pro, au même niveau que NAS01.
-
-La logique est donc :
-
-```text
-VMware Workstation Pro
-│
-├── ESXI01
-│   ├── FW01
-│   ├── DC01
-│   ├── FS01
-│   └── CLT-W10-01
-│
-├── VEEAM01
-│
-└── NAS01
-```
-
-Cette séparation permet au serveur Veeam de rester disponible même en cas de perte complète de l'hyperviseur ESXi.
+Il reste ainsi indépendant des machines virtuelles protégées hébergées sur l'hyperviseur ESXi.
 
 ---
 
-# Chaîne de sauvegarde
+## Chaîne de sauvegarde
 
 Le fonctionnement général peut être représenté ainsi :
 
 ```text
-FS01
-  │
-  │ Machine virtuelle
-  ▼
-ESXI01
-192.168.110.10
-  │
-  │ API VMware
-  ▼
-VEEAM01
-192.168.100.120
-  │
-  │ Transfert des données
-  ▼
+FS01 sur ESXI01
+       │
+       ▼
+Veeam Backup & Replication
+       │
+       │ Orchestration du job
+       ▼
 NAS01-Hardened
-192.168.100.130
-  │
-  ▼
+       │
+       ▼
 /data/veeam
-  │
-  ▼
+       │
+       ▼
 XFS
-  │
-  ▼
+       │
+       ▼
 Backup immutable
 ```
 
-VEEAM01 joue donc le rôle d'orchestrateur tandis que les données de sauvegarde sont stockées sur NAS01.
+VEEAM01 assure donc l'orchestration des opérations de sauvegarde et de restauration tandis que les fichiers de sauvegarde sont stockés sur NAS01.
 
 ---
 
-# Validation de la connectivité
-
-Avant l'ajout des différents composants dans Veeam, la connectivité réseau a été vérifiée depuis VEEAM01.
-
-## NAS01
-
-La communication SSH initialement nécessaire au déploiement du repository a été testée avec :
-
-```powershell
-Test-NetConnection 192.168.100.130 -Port 22
-```
-
-Résultat :
-
-```text
-TcpTestSucceeded : True
-```
-
-Cette connexion n'était nécessaire que pendant le déploiement initial du Hardened Repository.
-
-SSH a ensuite été désactivé sur NAS01 comme décrit dans la partie précédente.
-
----
-
-## ESXI01
-
-La connectivité HTTPS avec l'interface de gestion ESXi a également été contrôlée :
-
-```powershell
-Test-NetConnection 192.168.110.10 -Port 443
-```
-
-Résultat :
-
-```text
-TcpTestSucceeded : True
-```
-
-Le serveur Veeam peut donc communiquer avec l'API VMware utilisée pour administrer les sauvegardes des machines virtuelles.
-
----
-
-# Ajout d'ESXI01 dans Veeam
+## Ajout d'ESXI01 dans Veeam
 
 L'hyperviseur a été ajouté dans l'infrastructure Veeam avec son adresse de management :
 
@@ -167,38 +99,22 @@ Veeam peut ainsi sélectionner directement les machines virtuelles à protéger.
 
 ---
 
-# Repository de destination
+## Repository de destination
 
-Le repository utilisé pour les sauvegardes est celui préparé dans la partie précédente :
+Le job utilise le Linux Hardened Repository préparé dans la partie précédente :
 
 ```text
 NAS01-Hardened
-```
-
-Il repose sur :
-
-```text
-NAS01
 └── /data/veeam
-    └── XFS
 ```
 
-Les principales protections sont :
+Il repose sur un volume XFS avec Fast Clone et une période d'immutabilité de 7 jours.
 
-| Fonction | Configuration |
-|---|---|
-| Type | Linux Hardened Repository |
-| Chemin | `/data/veeam` |
-| Système de fichiers | XFS |
-| Fast Clone | Activé |
-| Immutabilité | 7 jours |
-| Tâches simultanées | 2 |
-
-Les fichiers de sauvegarde sont donc stockés indépendamment d'ESXI01.
+Les fichiers de sauvegarde sont ainsi stockés en dehors d'ESXI01.
 
 ---
 
-# Création du job FS01
+## Création du job FS01
 
 Un premier job a été créé afin de protéger le serveur de fichiers :
 
@@ -223,14 +139,12 @@ Le job utilise comme destination :
 NAS01-Hardened
 ```
 
-La chaîne obtenue est donc :
+La chaîne logique est donc :
 
 ```text
 FS01
    ↓
-ESXI01
-   ↓
-VEEAM01
+Veeam Backup & Replication
    ↓
 NAS01-Hardened
    ↓
@@ -239,7 +153,7 @@ NAS01-Hardened
 
 ---
 
-# Première sauvegarde de FS01
+## Première sauvegarde de FS01
 
 Le job a été exécuté afin de créer une première sauvegarde complète de la machine virtuelle.
 
@@ -269,21 +183,13 @@ L'exécution du job `Backup FS01` s'est terminée avec succès :
 
 ![Sauvegarde réussie de FS01](../images/veeam-backup-restore/02-fs01-backup-success.png)
 
-La session confirme notamment :
-
-- `14,7 GB` de données traitées ;
-- `11 GB` de données lues ;
-- `6,7 GB` transférés ;
-- un débit de traitement de `153 MB/s` ;
-- une durée totale de `02:39` ;
-- l'activation du **Changed Block Tracking** ;
-- `1 VM processed successfully`.
+La capture confirme également l'activation du **Changed Block Tracking** et le traitement réussi de la VM FS01.
 
 Le repository utilisé est `NAS01-Hardened`.
 
 ---
 
-# Changed Block Tracking
+## Changed Block Tracking
 
 Veeam utilise le **Changed Block Tracking**, ou CBT, proposé par VMware.
 
@@ -313,11 +219,11 @@ Backup incrémental
 
 Cela permet de réduire les lectures inutiles lors des sauvegardes suivantes.
 
-Le CBT a été activé pour FS01 lors de la sauvegarde.
+Le job de sauvegarde de FS01 utilise donc le Changed Block Tracking fourni par VMware.
 
 ---
 
-# Validation du backup
+## Validation du backup
 
 Après exécution du job, FS01 apparaît dans les sauvegardes disponibles.
 
@@ -336,7 +242,7 @@ Pour cette première validation, le choix a été fait de tester une **restaurat
 
 ---
 
-# Scénario de File Level Restore
+## Scénario de File Level Restore
 
 Le fichier choisi pour le test se trouve sur le partage RH :
 
@@ -354,7 +260,7 @@ L'objectif est de simuler une suppression accidentelle réalisée par un utilisa
 
 ---
 
-# Suppression volontaire du fichier
+## Suppression volontaire du fichier
 
 Avant la suppression, le partage RH contient notamment :
 
@@ -393,7 +299,7 @@ Besoin de restauration
 
 ---
 
-# File Level Restore
+## File Level Restore
 
 Depuis Veeam Backup & Replication, le restore point de FS01 a été ouvert avec le mode de restauration de fichiers Windows.
 
@@ -413,7 +319,7 @@ Le fichier supprimé du serveur de production est donc toujours présent dans le
 
 ---
 
-# Restauration vers l'emplacement d'origine
+## Restauration vers l'emplacement d'origine
 
 Le fichier :
 
@@ -435,11 +341,13 @@ Lors de cette opération, des identifiants disposant des droits nécessaires sur
 
 ---
 
-# Résultat de la restauration
+## Résultat du File Level Restore
 
 La restauration s'est terminée avec succès.
 
-Le résultat observé était :
+![Restauration granulaire du fichier employes.xlsx](../images/veeam-backup-restore/03-file-level-restore.png)
+
+Veeam confirme :
 
 | Paramètre | Valeur |
 |---|---|
@@ -449,36 +357,13 @@ Le résultat observé était :
 | Erreurs | 0 |
 | Destination | `D:\Partages\RH\employes.xlsx` |
 
-Le fichier a donc été replacé directement dans son dossier d'origine.
+La restauration a été réalisée via la **vSphere Guest Interaction API**.
 
-### Validation du File Level Restore
-
-Le résultat de la restauration est visible directement dans Veeam Backup Browser :
-
-![Restauration granulaire du fichier employes.xlsx](../images/veeam-backup-restore/03-file-level-restore.png)
-
-Le restore point contient bien le fichier `employes.xlsx` dans :
-
-```text
-D:\Partages\RH
-```
-
-Veeam confirme ensuite :
-
-```text
-Files to restore : 1
-Restored files   : 1
-Success          : 1
-Errors           : 0
-```
-
-La restauration a été réalisée via la **vSphere Guest Interaction API** et s'est terminée en environ 16 secondes.
-
-Le fichier `D:\Partages\RH\employes.xlsx` a donc bien été replacé sur FS01.
+Le fichier `employes.xlsx` a donc été replacé à son emplacement d'origine sur FS01.
 
 ---
 
-# Validation côté utilisateur
+## Validation côté utilisateur
 
 Le partage RH peut ensuite être contrôlé depuis un poste client :
 
@@ -522,43 +407,23 @@ Fichier de nouveau accessible
 
 ---
 
-# Test de l'immutabilité
+## Test de l'immutabilité
 
-Après avoir validé le File Level Restore, l'immutabilité configurée sur le Hardened Repository a également été testée.
+Après avoir validé le File Level Restore, l'immutabilité configurée sur `NAS01-Hardened` a également été testée.
 
-L'objectif est cette fois de vérifier qu'un backup encore protégé ne peut pas être supprimé prématurément.
-
-Le repository utilise :
+Le repository utilise une période de :
 
 ```text
 7 jours d'immutabilité
 ```
 
----
+L'objectif est de vérifier qu'un backup encore protégé ne peut pas être supprimé prématurément.
 
-# Tentative de suppression du backup
-
-Depuis Veeam Backup & Replication, une suppression physique du backup a été demandée avec :
+Une suppression physique du backup a été demandée depuis Veeam Backup & Replication avec l'action :
 
 ```text
 Delete from disk
 ```
-
-Veeam a refusé la suppression du fichier encore protégé.
-
-Le message indique notamment :
-
-```text
-Unable to delete 1 immutable backup file
-```
-
-et précise la date à partir de laquelle le fichier pourra être supprimé.
-
-Cela démontre que le backup ne peut pas être effacé normalement avant l'expiration de sa période d'immutabilité.
-
-### Validation de l'immutabilité
-
-Une tentative de suppression physique du backup a été effectuée depuis Veeam avec l'action `Delete from disk`.
 
 ![Test de l'immutabilité du backup FS01](../images/veeam-backup-restore/04-immutability-test.png)
 
@@ -566,21 +431,16 @@ Veeam refuse la suppression et retourne notamment :
 
 ```text
 Unable to delete 1 immutable backup file
-```
-
-La session indique également :
-
-```text
 0 deleted
 ```
 
-et précise la date à partir de laquelle le fichier pourra être supprimé.
+La session précise également la date à partir de laquelle le fichier pourra être supprimé.
 
 Cette vérification confirme que l'immutabilité configurée sur `NAS01-Hardened` est réellement appliquée aux fichiers de sauvegarde.
 
 ---
 
-# Intérêt de cette protection
+## Intérêt de cette protection
 
 Sans immutabilité :
 
@@ -612,7 +472,7 @@ Elle ne remplace pas une stratégie de sauvegarde complète, mais réduit fortem
 
 ---
 
-# Validation de la chaîne complète
+## Validation de la chaîne complète
 
 À ce stade, plusieurs mécanismes ont été testés concrètement.
 
@@ -624,16 +484,16 @@ Elle ne remplace pas une stratégie de sauvegarde complète, mais réduit fortem
                      │
                      │ Backup
                      ▼
-                  VEEAM01
+                   VEEAM01
                      │
                      ▼
-              NAS01-Hardened
+               NAS01-Hardened
                      │
                      ▼
-                 XFS /data
+                  XFS /data
                      │
                      ▼
-              Backup immutable
+               Backup immutable
                      │
           ┌──────────┴──────────┐
           │                     │
@@ -649,7 +509,7 @@ La chaîne n'a donc pas uniquement été configurée : elle a été testée à l
 
 ---
 
-# Validation finale
+## Validation finale
 
 À l'issue de cette partie :
 
@@ -670,7 +530,7 @@ La chaîne n'a donc pas uniquement été configurée : elle a été testée à l
 - une tentative de suppression d'un backup immutable a été réalisée ;
 - Veeam a refusé la suppression avant la fin de la période de protection.
 
-La sauvegarde et la restauration granulaire sont donc opérationnelles.
+La sauvegarde, la restauration granulaire et l'immutabilité du repository sont donc opérationnelles.
 
 La prochaine étape consiste à aller plus loin en simulant non plus la perte d'un fichier, mais la **perte complète du serveur FS01**.
 
