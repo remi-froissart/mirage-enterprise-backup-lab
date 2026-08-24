@@ -76,6 +76,16 @@ Cette organisation permet de séparer clairement les différents types d'objets 
 
 ---
 
+### Organisation des OU
+
+L'annuaire a été structuré afin de séparer les utilisateurs, les groupes, les postes clients et les serveurs.
+
+![Structure des OU Active Directory](../images/active-directory/01-ou-structure.png)
+
+Cette organisation facilite l'application des stratégies de groupe et permet de conserver une arborescence lisible lorsque l'infrastructure évolue.
+
+---
+
 ## OU Utilisateurs
 
 Les comptes utilisateurs sont organisés selon leur service.
