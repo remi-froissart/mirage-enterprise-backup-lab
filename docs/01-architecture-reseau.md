@@ -20,7 +20,7 @@ Le lab est organisé autour de trois éléments principaux :
 
 VEEAM01 et NAS01 sont exécutés directement dans VMware Workstation et ne sont donc pas hébergés dans ESXI01.
 
-Cette séparation permet de conserver l'infrastructure de sauvegarde disponible en cas de perte ou de compromission de l'hyperviseur ESXi.
+Cette séparation permet de conserver l'infrastructure de sauvegarde indépendante des machines virtuelles hébergées sur ESXI01 et disponible lors d'une perte de ces dernières.
 
 ![Architecture générale du lab](../images/architecture/mirage-enterprise-backup-lab.png)
 
