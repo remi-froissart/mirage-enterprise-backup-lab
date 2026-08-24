@@ -55,7 +55,7 @@ Le scénario de reprise après sinistre a été validé :
 1. sauvegarde de FS01 vers le repository hardened ;
 2. suppression volontaire de la VM FS01 ;
 3. restauration complète depuis Veeam ;
-4. retour des partages SMB ;
+4. restauration des partages SMB ;
 5. conservation des ACL et des données ;
 6. lecteurs réseau utilisateurs de nouveau opérationnels.
 
