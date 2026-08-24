@@ -67,6 +67,22 @@ Le lab ne se limite pas au déploiement de l'infrastructure. Plusieurs scénario
 - restauration complète de la VM avec Entire VM Restore ;
 - validation des partages et des données depuis une session utilisateur après restauration.
 
+## Limites du lab
+
+Cette infrastructure est un environnement de laboratoire exécuté sur un unique hôte physique.
+
+La stratégie de sauvegarde ne respecte donc pas intégralement la règle **3-2-1**, qui recommande :
+
+- 3 copies des données ;
+- 2 supports ou systèmes de stockage distincts ;
+- 1 copie hors site.
+
+Dans ce lab, VEEAM01 et NAS01 sont volontairement séparés de l'hyperviseur ESXI01, ce qui permet de conserver l'infrastructure de sauvegarde disponible lors de la perte d'une VM hébergée sur ESXi.
+
+Cependant, ESXI01, VEEAM01 et NAS01 restent hébergés sur le même ordinateur physique via VMware Workstation Pro. Une défaillance complète de cet hôte pourrait donc affecter simultanément la production et les sauvegardes.
+
+Dans un environnement de production, cette architecture serait complétée par une copie supplémentaire sur un stockage physiquement distinct et/ou hors site, par exemple via un second repository, un site distant ou du stockage objet compatible avec l'immutabilité.
+
 ## Documentation détaillée
 
 - [01 - Architecture réseau](docs/01-architecture-reseau.md)
