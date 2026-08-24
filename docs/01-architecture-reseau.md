@@ -315,25 +315,9 @@ La synchronisation NTP d'ESXI01 est donc opérationnelle.
 
 L'un des choix importants du lab est de ne pas héberger VEEAM01 et NAS01 dans ESXI01.
 
-L'architecture retenue est :
+Ils sont exécutés directement dans VMware Workstation Pro et restent donc indépendants des machines virtuelles hébergées par l'hyperviseur ESXi.
 
-```text
-VMware Workstation Pro
-│
-├── ESXI01
-│   ├── FW01
-│   ├── DC01
-│   ├── FS01
-│   └── CLT-W10-01
-│
-├── VEEAM01
-│
-└── NAS01
-```
-
-Cette séparation évite que l'ensemble de l'infrastructure de sauvegarde dépende de l'hyperviseur qu'elle doit protéger.
-
-En cas de perte complète d'ESXI01 :
+En cas de perte complète des VM hébergées sur ESXI01 :
 
 ```text
 ESXI01
@@ -348,9 +332,11 @@ NAS01
    ✓
 ```
 
-Les sauvegardes restent donc disponibles pour permettre la restauration des machines virtuelles.
+Les sauvegardes restent alors accessibles depuis l'infrastructure Veeam afin de permettre la restauration des machines virtuelles.
 
-Cette logique sera exploitée dans les parties consacrées à Veeam et au Hardened Repository.
+Cette séparation reste toutefois **logique et non physique**, puisque l'ensemble du lab fonctionne sur le même ordinateur hôte. Cette limite est détaillée dans le README avec la règle de sauvegarde 3-2-1.
+
+Cette logique sera exploitée dans les parties consacrées à Veeam et au Linux Hardened Repository.
 
 ---
 
